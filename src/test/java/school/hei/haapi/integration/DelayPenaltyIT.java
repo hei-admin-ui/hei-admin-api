@@ -2,8 +2,8 @@ package school.hei.haapi.integration;
 
 import java.time.Instant;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.*;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -31,6 +31,7 @@ import static school.hei.haapi.integration.conf.TestUtils.*;
 @Testcontainers
 @ContextConfiguration(initializers = DelayPenaltyIT.ContextInitializer.class)
 @AutoConfigureMockMvc
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DelayPenaltyIT {
     @MockBean
     private SentryConf sentryConf;
@@ -49,14 +50,6 @@ class DelayPenaltyIT {
         delayPenalty.setApplicabilityDelayAfterGrace(100);
         return delayPenalty;
     }
-    static DelayPenalty delayPenalty() {
-        DelayPenalty delayPenalty = new DelayPenalty();
-        delayPenalty.setInterestPercent(3);
-        delayPenalty.setInterestTimerate(DelayPenalty.InterestTimerateEnum.DAILY);
-        delayPenalty.setGraceDelay(7);
-        delayPenalty.setApplicabilityDelayAfterGrace(6);
-        return delayPenalty;
-    }
     static DelayPenalty delayPenalty2() {
         DelayPenalty delayPenalty = new DelayPenalty();
         delayPenalty.setId(DELAY_PENALTY2_ID);
@@ -73,7 +66,9 @@ class DelayPenaltyIT {
         setUpCognito(cognitoComponentMock);
     }
 
+
     @Test
+    @Order(1)
     void student_read_ok() throws ApiException {
         ApiClient student1Client = anApiClient(STUDENT1_TOKEN);
         PayingApi api = new PayingApi(student1Client);
@@ -83,7 +78,9 @@ class DelayPenaltyIT {
 
     }
 
+
     @Test
+    @Order(2)
     void student_write_ko() throws ApiException {
         ApiClient student1Client = anApiClient(STUDENT1_TOKEN);
         PayingApi api = new PayingApi(student1Client);
@@ -93,13 +90,24 @@ class DelayPenaltyIT {
                 () -> api.createDelayPenaltyChange(delayPenalty1()));
     }
 
+
     @Test
+    @Order(3)
     void manager_write_ok() throws ApiException {
         ApiClient manager1Client = anApiClient(MANAGER1_TOKEN);
         PayingApi api = new PayingApi(manager1Client);
 
         DelayPenalty actual = api.createDelayPenaltyChange(delayPenalty1());
-        assertEquals(actual,delayPenalty());
+
+        DelayPenalty delayPenalty = new DelayPenalty();
+        delayPenalty.setId(actual.getId());
+        delayPenalty.setInterestPercent(100);
+        delayPenalty.setInterestTimerate(DelayPenalty.InterestTimerateEnum.DAILY);
+        delayPenalty.setGraceDelay(1);
+        delayPenalty.setApplicabilityDelayAfterGrace(100);
+        delayPenalty.setCreationDatetime(actual.getCreationDatetime());
+
+        assertEquals(actual,delayPenalty);
     }
 
 
