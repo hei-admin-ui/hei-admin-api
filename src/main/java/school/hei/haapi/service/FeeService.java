@@ -1,6 +1,7 @@
 package school.hei.haapi.service;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import javax.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import school.hei.haapi.endpoint.event.EventProducer;
 import school.hei.haapi.endpoint.event.model.TypedLateFeeVerified;
 import school.hei.haapi.endpoint.event.model.gen.LateFeeVerified;
 import school.hei.haapi.model.BoundedPageSize;
+import school.hei.haapi.model.DelayPenalty;
 import school.hei.haapi.model.Fee;
 import school.hei.haapi.model.PageFromOne;
 import school.hei.haapi.model.validator.FeeValidator;
@@ -22,6 +24,7 @@ import school.hei.haapi.repository.FeeRepository;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.LATE;
 import static school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.PAID;
+import static school.hei.haapi.service.utils.FeeUtils.countRemainingAccount;
 
 @Service
 @AllArgsConstructor
@@ -31,7 +34,7 @@ public class FeeService {
   private static final school.hei.haapi.endpoint.rest.model.Fee.StatusEnum DEFAULT_STATUS = LATE;
   private final FeeRepository feeRepository;
   private final FeeValidator feeValidator;
-
+  private final DelayPenaltyService delayPenaltyService;
   private final EventProducer eventProducer;
 
   public Fee getById(String id) {
@@ -49,10 +52,10 @@ public class FeeService {
   }
 
   public List<Fee> getFees(
-      PageFromOne page, BoundedPageSize pageSize,
-      school.hei.haapi.endpoint.rest.model.Fee.StatusEnum status) {
+          PageFromOne page, BoundedPageSize pageSize,
+          school.hei.haapi.endpoint.rest.model.Fee.StatusEnum status) {
     Pageable pageable =
-        PageRequest.of(page.getValue() - 1, pageSize.getValue(), Sort.by(DESC, "dueDatetime"));
+            PageRequest.of(page.getValue() - 1, pageSize.getValue(), Sort.by(DESC, "dueDatetime"));
     if (status != null) {
       return feeRepository.getFeesByStatus(status, pageable);
     }
@@ -60,12 +63,22 @@ public class FeeService {
   }
 
   public List<Fee> getFeesByStudentId(
-      String studentId, PageFromOne page, BoundedPageSize pageSize,
-      school.hei.haapi.endpoint.rest.model.Fee.StatusEnum status) {
+          String studentId, PageFromOne page, BoundedPageSize pageSize,
+          school.hei.haapi.endpoint.rest.model.Fee.StatusEnum status) {
     Pageable pageable = PageRequest.of(
-        page.getValue() - 1,
-        pageSize.getValue(),
-        Sort.by(DESC, "dueDatetime"));
+            page.getValue() - 1,
+            pageSize.getValue(),
+            Sort.by(DESC, "dueDatetime"));
+    List<Fee> feeList = feeRepository.findAll();
+    DelayPenalty delayPenalty = delayPenaltyService.getDelayPenalty();
+    for (Fee fee : feeList) {
+      if (fee.getCreationDatetime().compareTo(delayPenalty.getCreation_datetime()) < 0 && fee.getDueDatetime().atZone(ZoneId.systemDefault()).getDayOfMonth()<=29){
+        fee.setRemainingAmount(countRemainingAccount(fee.getTotalAmount(), delayPenalty.getGrace_delay()) - fee.getTotalAmount());
+        fee.setTotalAmount(countRemainingAccount(fee.getTotalAmount(), delayPenalty.getGrace_delay()));
+        fee.setStatus(LATE);
+      }
+    }
+    feeRepository.saveAll(feeList);
     if (status != null) {
       return feeRepository.getFeesByStudentIdAndStatus(studentId, status, pageable);
     }
@@ -93,13 +106,13 @@ public class FeeService {
 
   private TypedLateFeeVerified toTypedEvent(Fee fee) {
     return new TypedLateFeeVerified(
-        LateFeeVerified.builder()
-            .type(fee.getType())
-            .student(fee.getStudent())
-            .comment(fee.getComment())
-            .remainingAmount(fee.getRemainingAmount())
-            .dueDatetime(fee.getDueDatetime())
-            .build()
+            LateFeeVerified.builder()
+                    .type(fee.getType())
+                    .student(fee.getStudent())
+                    .comment(fee.getComment())
+                    .remainingAmount(fee.getRemainingAmount())
+                    .dueDatetime(fee.getDueDatetime())
+                    .build()
     );
   }
 
@@ -111,10 +124,10 @@ public class FeeService {
   public void sendLateFeesEmail() {
     List<Fee> lateFees = feeRepository.getFeesByStatus(LATE);
     lateFees.forEach(
-        fee -> {
-          eventProducer.accept(List.of(toTypedEvent(fee)));
-          log.info("Late Fee with id." + fee.getId() + " is sent to Queue");
-        }
+            fee -> {
+              eventProducer.accept(List.of(toTypedEvent(fee)));
+              log.info("Late Fee with id." + fee.getId() + " is sent to Queue");
+            }
     );
   }
 

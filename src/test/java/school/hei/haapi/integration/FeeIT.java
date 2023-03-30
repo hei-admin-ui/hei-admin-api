@@ -114,7 +114,6 @@ class FeeIT {
 
     Fee actualFee = api.getStudentFeeById(STUDENT1_ID, FEE1_ID);
     List<Fee> actual = api.getStudentFees(STUDENT1_ID, 1, 5, null);
-
     assertEquals(fee1(), actualFee);
     assertTrue(actual.contains(fee1()));
     assertTrue(actual.contains(fee2()));

@@ -13,6 +13,7 @@ import school.hei.haapi.model.PageFromOne;
 import school.hei.haapi.model.Payment;
 import school.hei.haapi.model.User;
 import school.hei.haapi.model.validator.FeeValidator;
+import school.hei.haapi.repository.DelayPenaltyRepository;
 import school.hei.haapi.repository.FeeRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,6 +32,7 @@ class FeeServiceTest {
   FeeRepository feeRepository;
   FeeValidator feeValidator;
   EventProducer eventProducer;
+  DelayPenaltyService delayPenaltyService;
 
   static User student1() {
     return User.builder()
@@ -113,7 +115,8 @@ class FeeServiceTest {
     feeRepository = mock(FeeRepository.class);
     feeValidator = mock(FeeValidator.class);
     eventProducer = mock(EventProducer.class);
-    subject = new FeeService(feeRepository, feeValidator, eventProducer);
+    delayPenaltyService = mock(DelayPenaltyService.class);
+    subject = new FeeService(feeRepository, feeValidator,delayPenaltyService, eventProducer);
   }
 
   @Test

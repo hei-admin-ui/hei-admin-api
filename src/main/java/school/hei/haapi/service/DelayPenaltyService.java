@@ -11,11 +11,11 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class DelayPenaltyService {
-    private final DelayPenaltyRepository repository;
+    private final DelayPenaltyRepository delayPenaltyRepository;
     private final DelayPenaltyValidator delayPenaltyValidator;
 
     public DelayPenalty getDelayPenalty(){
-        List<DelayPenalty> delayPenalties = repository.findAll();
+        List<DelayPenalty> delayPenalties = delayPenaltyRepository.findAll();
         DelayPenalty activeDelay = delayPenalties.get(0);
         for (DelayPenalty delayPenalty: delayPenalties) {
             if(activeDelay.getCreation_datetime().compareTo(delayPenalty.getCreation_datetime()) < 0){
@@ -26,6 +26,6 @@ public class DelayPenaltyService {
     }
      public DelayPenalty updateDelayPenalty(DelayPenalty update){
         delayPenaltyValidator.accept(update);
-        return repository.save(update);
+        return delayPenaltyRepository.save(update);
      }
 }
