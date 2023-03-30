@@ -12,12 +12,12 @@ import java.util.List;
 @AllArgsConstructor
 public class DelayPenaltyService {
     private final DelayPenaltyRepository repository;
-    private final DelayPenaltyValidator validator;
+    private final DelayPenaltyValidator delayPenaltyValidator;
 
     public DelayPenalty getDelayPenalty(){
-        List<DelayPenalty> getAll = repository.findAll();
-        DelayPenalty activeDelay = getAll.get(0);
-        for (DelayPenalty delayPenalty: getAll) {
+        List<DelayPenalty> delayPenalties = repository.findAll();
+        DelayPenalty activeDelay = delayPenalties.get(0);
+        for (DelayPenalty delayPenalty: delayPenalties) {
             if(activeDelay.getCreation_datetime().compareTo(delayPenalty.getCreation_datetime()) < 0){
                 activeDelay = delayPenalty;
             }
@@ -25,7 +25,7 @@ public class DelayPenaltyService {
         return activeDelay;
     }
      public DelayPenalty updateDelayPenalty(DelayPenalty update){
-        validator.accept(update);
+        delayPenaltyValidator.accept(update);
         return repository.save(update);
      }
 }

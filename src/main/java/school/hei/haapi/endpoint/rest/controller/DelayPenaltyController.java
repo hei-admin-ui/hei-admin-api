@@ -10,20 +10,18 @@ import school.hei.haapi.endpoint.rest.model.CreateDelayPenaltyChange;
 import school.hei.haapi.endpoint.rest.model.DelayPenalty;
 import school.hei.haapi.service.DelayPenaltyService;
 
-
 @RestController
 @AllArgsConstructor
 public class DelayPenaltyController {
-    private final DelayPenaltyMapper mapper;
-    private final DelayPenaltyService service;
+    private final DelayPenaltyMapper delayPenaltyMapper;
+    private final DelayPenaltyService penaltyService;
 
     @PutMapping("/delay_penalty_change")
     public DelayPenalty crupdateDelayPenalty(@RequestBody CreateDelayPenaltyChange news){
-        return mapper.toRest(service.updateDelayPenalty(mapper.toDomain(news)));
+        return delayPenaltyMapper.toRest(penaltyService.updateDelayPenalty(delayPenaltyMapper.toDomain(news)));
     }
-
     @GetMapping("/delay_penalty")
     public DelayPenalty getDelayPenalty(){
-        return mapper.toRest(service.getDelayPenalty());
+        return delayPenaltyMapper.toRest(penaltyService.getDelayPenalty());
     }
 }
