@@ -25,6 +25,8 @@ public class TestUtils {
   public static final String MANAGER_ID = "manager1_id";
   public static final String GROUP1_ID = "group1_id";
   public static final String FEE1_ID = "fee1_id";
+  public static final String DELAY_PENALTY1_ID = "delay_penalty1_id";
+  public static final String DELAY_PENALTY2_ID = "delay_penalty2_id";
   public static final String FEE2_ID = "fee2_id";
   public static final String FEE3_ID = "fee3_id";
   public static final String FEE4_ID = "fee4_id";

@@ -1,6 +1,5 @@
 package school.hei.haapi.endpoint.rest.security;
 
-import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
@@ -14,13 +13,10 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import school.hei.haapi.model.exception.ForbiddenException;
 
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.OPTIONS;
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpMethod.PUT;
-import static school.hei.haapi.endpoint.rest.security.model.Role.MANAGER;
-import static school.hei.haapi.endpoint.rest.security.model.Role.STUDENT;
-import static school.hei.haapi.endpoint.rest.security.model.Role.TEACHER;
+import javax.servlet.http.HttpServletRequest;
+
+import static org.springframework.http.HttpMethod.*;
+import static school.hei.haapi.endpoint.rest.security.model.Role.*;
 
 @Configuration
 @Slf4j
@@ -99,7 +95,14 @@ public class SecurityConf extends WebSecurityConfigurerAdapter {
         .antMatchers("/managers/**").hasAnyRole(MANAGER.getRole())
         .antMatchers(GET, "/groups").authenticated()
         .antMatchers(GET, "/groups/*").authenticated()
-        .antMatchers(PUT, "/groups/**").hasAnyRole(MANAGER.getRole())
+            .antMatchers(PUT, "/groups/**").hasAnyRole(MANAGER.getRole())
+            .antMatchers(GET, "/students/{student_id}/courses").authenticated()
+            .antMatchers(PUT, "/students/{student_id}/courses").hasAnyRole(MANAGER.getRole())
+            .antMatchers(GET , "/courses").authenticated()
+            .antMatchers(GET, "/courses/*").authenticated()
+            .antMatchers(PUT, "/courses").hasAnyRole(MANAGER.getRole())
+            .antMatchers(GET, "/delay_penalty").authenticated()
+            .antMatchers(PUT,"/delay_penalty_change").hasAnyRole(MANAGER.getRole())
         .antMatchers("/**").denyAll()
 
         // disable superfluous protections
