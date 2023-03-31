@@ -1,5 +1,6 @@
 package school.hei.haapi.endpoint.rest.mapper;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -28,8 +29,8 @@ public class FeeMapper {
         .studentId(fee.getStudent().getId())
         .status(fee.getStatus())
         .type(fee.getType())
-        .totalAmount(fee.getTotalAmount())
-        .remainingAmount(fee.getRemainingAmount())
+        .totalAmount(BigDecimal.valueOf(fee.getTotalAmount()))
+        .remainingAmount(BigDecimal.valueOf(fee.getRemainingAmount()))
         .comment(fee.getComment())
         .creationDatetime(fee.getCreationDatetime())
         .updatedAt(fee.getUpdatedAt())
@@ -44,10 +45,10 @@ public class FeeMapper {
     return school.hei.haapi.model.Fee.builder()
         .student(student)
         .type(toDomainFeeType(Objects.requireNonNull(createFee.getType())))
-        .totalAmount(createFee.getTotalAmount())
+        .totalAmount(createFee.getTotalAmount().doubleValue())
         .updatedAt(createFee.getCreationDatetime())
         .status(UNPAID)
-        .remainingAmount(createFee.getTotalAmount())
+        .remainingAmount(createFee.getTotalAmount().doubleValue())
         .comment(createFee.getComment())
         .creationDatetime(createFee.getCreationDatetime())
         .dueDatetime(createFee.getDueDatetime())

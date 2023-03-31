@@ -23,17 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static school.hei.haapi.integration.conf.TestUtils.FEE1_ID;
-import static school.hei.haapi.integration.conf.TestUtils.FEE2_ID;
-import static school.hei.haapi.integration.conf.TestUtils.FEE3_ID;
-import static school.hei.haapi.integration.conf.TestUtils.MANAGER1_TOKEN;
-import static school.hei.haapi.integration.conf.TestUtils.STUDENT1_ID;
-import static school.hei.haapi.integration.conf.TestUtils.STUDENT1_TOKEN;
-import static school.hei.haapi.integration.conf.TestUtils.STUDENT2_ID;
-import static school.hei.haapi.integration.conf.TestUtils.TEACHER1_TOKEN;
-import static school.hei.haapi.integration.conf.TestUtils.anAvailableRandomPort;
-import static school.hei.haapi.integration.conf.TestUtils.assertThrowsApiException;
-import static school.hei.haapi.integration.conf.TestUtils.setUpCognito;
+import static school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.LATE;
+import static school.hei.haapi.integration.conf.TestUtils.*;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
@@ -83,7 +74,7 @@ class FeeIT {
     Fee fee = new Fee();
     fee.setId(FEE3_ID);
     fee.setStudentId(STUDENT1_ID);
-    fee.setStatus(Fee.StatusEnum.LATE);
+    fee.setStatus(LATE);
     fee.setType(Fee.TypeEnum.TUITION);
     fee.setTotalAmount(5000);
     fee.setRemainingAmount(5000);
@@ -91,6 +82,21 @@ class FeeIT {
     fee.setUpdatedAt(Instant.parse("2023-02-08T08:30:24Z"));
     fee.creationDatetime(Instant.parse("2022-12-08T08:25:24.00Z"));
     fee.setDueDatetime(Instant.parse("2021-12-09T08:25:24.00Z"));
+    return fee;
+  }
+
+  static Fee fee4() {
+    Fee fee = new Fee();
+    fee.setId(FEE7_ID);
+    fee.setStudentId(STUDENT2_ID);
+    fee.setStatus(LATE);
+    fee.setType(Fee.TypeEnum.TUITION);
+    fee.setTotalAmount(106.0808);
+    fee.setRemainingAmount(106.0808);
+    fee.setComment("Comment");
+    fee.setUpdatedAt(Instant.parse("2023-02-08T08:30:24Z"));
+    fee.creationDatetime(Instant.parse("2022-12-08T08:25:24.00Z"));
+    fee.setDueDatetime(Instant.parse("2023-02-26T00:00:00Z"));
     return fee;
   }
 
@@ -137,6 +143,8 @@ class FeeIT {
     assertTrue(actualFees2.contains(fee1()));
     assertTrue(actualFees2.contains(fee2()));
   }
+
+
 
   @Test
   void student_read_ko() {
@@ -227,6 +235,51 @@ class FeeIT {
     assertTrue(exceptionMessage2.contains("Total amount must be positive"));
     assertTrue(exceptionMessage3.contains("Due datetime is mandatory"));
   }
+
+
+  @Test
+  void student_get_fees_with_delay() throws ApiException {
+    ApiClient manager1Client = anApiClient(MANAGER1_TOKEN);
+    PayingApi api = new PayingApi(manager1Client);
+
+    List<Fee> actualFee = api.getStudentFees(STUDENT2_ID,1,15,"LATE");
+    List<Fee> actualFees1 = api.getStudentFees(STUDENT2_ID, 1, 5, null);
+    List<Fee> actualFees2 = api.getFees(String.valueOf(Fee.StatusEnum.PAID), 1, 10);
+
+    assertEquals(fee1(), actualFee);
+    assertEquals(actualFee.get(0).getTotalAmount(),fee4().getTotalAmount());
+    assertEquals(actualFees1.get(1).getRemainingAmount(),fee4().getRemainingAmount());
+    assertEquals(2, actualFees2.size());
+    assertTrue(actualFees1.contains(fee1()));
+    assertTrue(actualFees1.contains(fee2()));
+    assertTrue(actualFees1.contains(fee3()));
+    assertTrue(actualFees2.contains(fee1()));
+    assertTrue(actualFees2.contains(fee2()));
+  }
+
+  @Test
+  void student_get_fees_without_delay() throws ApiException {
+
+    // TODO : make a mock client without delay
+    ApiClient manager1Client = anApiClient(MANAGER1_TOKEN);
+    PayingApi api = new PayingApi(manager1Client);
+
+    List<Fee> actualFee = api.getStudentFees(STUDENT2_ID,1,15,"LATE");
+    List<Fee> actualFees1 = api.getStudentFees(STUDENT2_ID, 1, 5, null);
+    List<Fee> actualFees2 = api.getFees(String.valueOf(Fee.StatusEnum.PAID), 1, 10);
+
+    assertEquals(fee1(), actualFee);
+    assertEquals(actualFee.get(0).getTotalAmount(),fee4().getTotalAmount());
+    assertEquals(actualFees1.get(1).getRemainingAmount(),fee4().getRemainingAmount());
+    assertEquals(2, actualFees2.size());
+    assertTrue(actualFees1.contains(fee1()));
+    assertTrue(actualFees1.contains(fee2()));
+    assertTrue(actualFees1.contains(fee3()));
+    assertTrue(actualFees2.contains(fee1()));
+    assertTrue(actualFees2.contains(fee2()));
+  }
+
+
 
   static class ContextInitializer extends AbstractContextInitializer {
     public static final int SERVER_PORT = anAvailableRandomPort();

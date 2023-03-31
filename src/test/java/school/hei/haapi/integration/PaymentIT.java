@@ -227,7 +227,8 @@ class PaymentIT {
 
     Fee actualFee3 = api.getStudentFeeById(fee.getStudentId(), fee.getId());
     assertNotEquals(fee, actualFee3);
-    assertEquals((fee.getRemainingAmount() - creatablePayment1().getAmount()),
+    assertEquals
+            (fee.getRemainingAmount() - creatablePayment1().getAmount()),
         actualFee3.getRemainingAmount());
 
     assertEquals(expected, actual);

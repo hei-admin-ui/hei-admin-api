@@ -12,7 +12,7 @@ import java.util.List;
 
 public class FeeUtils {
     private static DelayPenaltyService delayPenaltyService;
-    public static int countRemainingAccount(int base, int grace_delay, int applicabilityAfterGrace) {
+    public static double countRemainingAccount(double base, int grace_delay, int applicabilityAfterGrace) {
 
         for (int i = 1; i <= applicabilityAfterGrace; i++) {
             base += ((base * grace_delay) / 100);
@@ -20,7 +20,7 @@ public class FeeUtils {
         return base;
     }
 
-    public static int checkDelayValue(Fee fee, Instant nowDatetime, int graceDelay, Instant dueFeesTime, DelayPenalty delayPenalty) {
+    public static double checkDelayValue(Fee fee, Instant nowDatetime, int graceDelay, Instant dueFeesTime, DelayPenalty delayPenalty) {
         if (nowDatetime.plus(graceDelay, ChronoUnit.DAYS).isBefore(dueFeesTime)) {
             return countRemainingAccount(fee.getRemainingAmount(), graceDelay, delayPenalty.getApplicability_delay_after_grace());
         }
