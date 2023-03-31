@@ -1,5 +1,7 @@
 package school.hei.haapi.endpoint.rest.mapper;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -10,7 +12,9 @@ import school.hei.haapi.endpoint.rest.validator.CreateFeeValidator;
 import school.hei.haapi.model.User;
 import school.hei.haapi.model.exception.BadRequestException;
 import school.hei.haapi.model.exception.NotFoundException;
+import school.hei.haapi.service.DelayPenaltyService;
 import school.hei.haapi.service.UserService;
+import school.hei.haapi.service.utils.FeeUtils;
 
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.UNPAID;
@@ -21,19 +25,56 @@ public class FeeMapper {
 
   private final UserService userService;
   private final CreateFeeValidator createFeeValidator;
+  private final DelayPenaltyService delayPenaltyService;
+
+  public Fee toRestFeeStudent(school.hei.haapi.model.Fee fee) {
+    Instant today = Instant.now();
+    if(fee.getRemainingAmount() > 0 && today.isAfter(fee.getDueDatetime())){
+      if(today.isAfter(fee.getDueDatetime().plus(delayPenaltyService.getDelayPenalty().getGrace_delay(),ChronoUnit.DAYS))){
+        return new Fee()
+                .id(fee.getId())
+                .studentId(fee.getStudent().getId())
+                .status(fee.getStatus())
+                .type(fee.getType())
+                .totalAmount(fee.getTotalAmount())
+                .remainingAmount(FeeUtils.realAmountToPay(
+                        fee.getRemainingAmount(),
+                        delayPenaltyService.getDelayPenalty().getInterest_percent(),
+                        fee.getDueDatetime(),
+                        delayPenaltyService.getDelayPenalty().getGrace_delay(),
+                        today,
+                        delayPenaltyService.getDelayPenalty().getApplicability_delay_after_grace()))
+                .comment(fee.getComment())
+                .creationDatetime(fee.getCreationDatetime())
+                .updatedAt(fee.getUpdatedAt())
+                .dueDatetime(fee.getDueDatetime());
+      }
+    }
+    return new Fee()
+            .id(fee.getId())
+            .studentId(fee.getStudent().getId())
+            .status(fee.getStatus())
+            .type(fee.getType())
+            .totalAmount(fee.getTotalAmount())
+            .remainingAmount(fee.getRemainingAmount())
+            .comment(fee.getComment())
+            .creationDatetime(fee.getCreationDatetime())
+            .updatedAt(fee.getUpdatedAt())
+            .dueDatetime(fee.getDueDatetime());
+  }
 
   public Fee toRestFee(school.hei.haapi.model.Fee fee) {
     return new Fee()
-        .id(fee.getId())
-        .studentId(fee.getStudent().getId())
-        .status(fee.getStatus())
-        .type(fee.getType())
-        .totalAmount(fee.getTotalAmount())
-        .remainingAmount(fee.getRemainingAmount())
-        .comment(fee.getComment())
-        .creationDatetime(fee.getCreationDatetime())
-        .updatedAt(fee.getUpdatedAt())
-        .dueDatetime(fee.getDueDatetime());
+            .id(fee.getId())
+            .studentId(fee.getStudent().getId())
+            .status(fee.getStatus())
+            .type(fee.getType())
+            .totalAmount(fee.getTotalAmount())
+            .remainingAmount(fee.getRemainingAmount())
+            .comment(fee.getComment())
+            .creationDatetime(fee.getCreationDatetime())
+            .updatedAt(fee.getUpdatedAt())
+            .dueDatetime(fee.getDueDatetime());
   }
 
   private school.hei.haapi.model.Fee toDomainFee(User student, CreateFee createFee) {

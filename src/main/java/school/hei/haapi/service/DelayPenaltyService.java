@@ -15,14 +15,8 @@ public class DelayPenaltyService {
     private final DelayPenaltyValidator validator;
 
     public DelayPenalty getDelayPenalty(){
-        List<DelayPenalty> getAll = repository.findAll();
-        DelayPenalty activeDelay = getAll.get(0);
-        for (DelayPenalty delayPenalty: getAll) {
-            if(activeDelay.getCreation_datetime().compareTo(delayPenalty.getCreation_datetime()) < 0){
-                activeDelay = delayPenalty;
-            }
-        }
-        return activeDelay;
+        List<DelayPenalty> getAll = repository.getDescPenalty();
+        return getAll.get(0);
     }
      public DelayPenalty updateDelayPenalty(DelayPenalty update){
         validator.accept(update);
