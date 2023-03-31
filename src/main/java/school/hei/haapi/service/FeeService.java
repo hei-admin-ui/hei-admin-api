@@ -24,7 +24,7 @@ import school.hei.haapi.repository.FeeRepository;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.LATE;
 import static school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.PAID;
-import static school.hei.haapi.service.utils.FeeUtils.countRemainingAccount;
+import static school.hei.haapi.service.utils.FeeUtils.*;
 
 @Service
 @AllArgsConstructor
@@ -69,22 +69,12 @@ public class FeeService {
             page.getValue() - 1,
             pageSize.getValue(),
             Sort.by(DESC, "dueDatetime"));
-    List<Fee> feeList = feeRepository.findAll();
-    DelayPenalty delayPenalty = delayPenaltyService.getDelayPenalty();
-    for (Fee fee : feeList) {
-      if (fee.getCreationDatetime().compareTo(delayPenalty.getCreation_datetime()) < 0 && fee.getDueDatetime().atZone(ZoneId.systemDefault()).getDayOfMonth()<=29){
-        fee.setRemainingAmount(countRemainingAccount(fee.getTotalAmount(), delayPenalty.getGrace_delay()) - fee.getTotalAmount());
-        fee.setTotalAmount(countRemainingAccount(fee.getTotalAmount(), delayPenalty.getGrace_delay()));
-        fee.setStatus(LATE);
-      }
-    }
-    feeRepository.saveAll(feeList);
-    if (status != null) {
-      return feeRepository.getFeesByStudentIdAndStatus(studentId, status, pageable);
-    }
-    return feeRepository.getByStudentId(studentId, pageable);
-  }
 
+    if (status != null) {
+      return checkStudentFeesDelay(feeRepository.getFeesByStudentIdAndStatus(studentId, status, pageable)) ;
+    }
+    return checkStudentFeesDelay(feeRepository.getByStudentId(studentId, pageable)) ;
+  }
   private Fee updateFeeStatus(Fee initialFee) {
     if (initialFee.getRemainingAmount() == 0) {
       initialFee.setStatus(PAID);
