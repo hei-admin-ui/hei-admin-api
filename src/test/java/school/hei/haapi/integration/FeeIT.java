@@ -91,8 +91,8 @@ class FeeIT {
     fee.setStudentId(STUDENT2_ID);
     fee.setStatus(LATE);
     fee.setType(Fee.TypeEnum.TUITION);
-    fee.setTotalAmount(106.0808);
-    fee.setRemainingAmount(106.0808);
+    fee.setTotalAmount(106);
+    fee.setRemainingAmount(106);
     fee.setComment("Comment");
     fee.setUpdatedAt(Instant.parse("2023-02-08T08:30:24Z"));
     fee.creationDatetime(Instant.parse("2022-12-08T08:25:24.00Z"));
@@ -115,6 +115,8 @@ class FeeIT {
 
   @Test
   void student_read_ok() throws ApiException {
+
+
     ApiClient student1Client = anApiClient(STUDENT1_TOKEN);
     PayingApi api = new PayingApi(student1Client);
 

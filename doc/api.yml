@@ -1120,7 +1120,7 @@ components:
         comment:
           type: string
         total_amount:
-          type: number
+          type: integer
         creation_datetime:
           type: string
           format: date-time
@@ -1137,7 +1137,7 @@ components:
         student_id:
           type: string
         remaining_amount:
-          type: number
+          type: integer
         status:
           type: string
           enum:

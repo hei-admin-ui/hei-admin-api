@@ -55,11 +55,11 @@ public class Fee implements Serializable {
   @Enumerated(EnumType.STRING)
   private school.hei.haapi.endpoint.rest.model.Fee.TypeEnum type;
 
-  private double totalAmount;
+  private int totalAmount;
 
   private Instant updatedAt;
 
-  private double remainingAmount;
+  private int remainingAmount;
 
   private String comment;
 
