@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -18,6 +19,7 @@ import school.hei.haapi.endpoint.rest.model.Fee;
 import school.hei.haapi.endpoint.rest.security.cognito.CognitoComponent;
 import school.hei.haapi.integration.conf.AbstractContextInitializer;
 import school.hei.haapi.integration.conf.TestUtils;
+import school.hei.haapi.service.DelayPenaltyService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -36,10 +38,15 @@ class FeeIT {
   @MockBean
   private CognitoComponent cognitoComponentMock;
 
+
+
   private static ApiClient anApiClient(String token) {
     return TestUtils.anApiClient(token, FeeIT.ContextInitializer.SERVER_PORT);
   }
 
+  DelayPenaltyService delayPenaltyService;
+
+=
   static Fee fee1() {
     Fee fee = new Fee();
     fee.setId(FEE1_ID);
@@ -266,8 +273,30 @@ class FeeIT {
     ApiClient manager1Client = anApiClient(MANAGER1_TOKEN);
     PayingApi api = new PayingApi(manager1Client);
 
-    List<Fee> actualFee = api.getStudentFees(STUDENT2_ID,1,15,"LATE");
-    List<Fee> actualFees1 = api.getStudentFees(STUDENT2_ID, 1, 5, null);
+    List<Fee> actualFee = api.getStudentFees(STUDENT1_ID,1,15,"LATE");
+    List<Fee> actualFees1 = api.getStudentFees(STUDENT1_ID, 1, 5, null);
+    List<Fee> actualFees2 = api.getFees(String.valueOf(Fee.StatusEnum.PAID), 1, 10);
+
+    assertEquals(fee1(), actualFee);
+    assertEquals(actualFee.get(0).getTotalAmount(),fee4().getTotalAmount());
+    assertEquals(actualFees1.get(1).getRemainingAmount(),fee4().getRemainingAmount());
+    assertEquals(2, actualFees2.size());
+    assertTrue(actualFees1.contains(fee1()));
+    assertTrue(actualFees1.contains(fee2()));
+    assertTrue(actualFees1.contains(fee3()));
+    assertTrue(actualFees2.contains(fee1()));
+    assertTrue(actualFees2.contains(fee2()));
+  }
+
+  @Test
+  void student_get_fees_paid() throws ApiException {
+
+    // TODO : make a mock client without delay
+    ApiClient manager1Client = anApiClient(MANAGER1_TOKEN);
+    PayingApi api = new PayingApi(manager1Client);
+
+    List<Fee> actualFee = api.getStudentFees(STUDENT1_ID,1,15,"PAID");
+    List<Fee> actualFees1 = api.getStudentFees(STUDENT1_ID, 1, 5, null);
     List<Fee> actualFees2 = api.getFees(String.valueOf(Fee.StatusEnum.PAID), 1, 10);
 
     assertEquals(fee1(), actualFee);
