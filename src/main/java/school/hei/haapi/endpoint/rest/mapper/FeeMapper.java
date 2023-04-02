@@ -1,6 +1,8 @@
 package school.hei.haapi.endpoint.rest.mapper;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +31,12 @@ public class FeeMapper {
 
   public Fee toRestFeeStudent(school.hei.haapi.model.Fee fee) {
     Instant today = Instant.now();
-    if(fee.getRemainingAmount() > 0 && today.isAfter(fee.getDueDatetime())){
+    Instant interestDay = fee.getDueDatetime()
+            .plus(delayPenaltyService.getDelayPenalty().getGrace_delay(),ChronoUnit.DAYS)
+            .plus(1,ChronoUnit.DAYS);
+    LocalDate targetDate = LocalDate.of(interestDay.atZone(ZoneId.of("UTC")).getYear(),interestDay.atZone(ZoneId.of("UTC")).getMonthValue(),interestDay.atZone(ZoneId.of("UTC")).getDayOfMonth());
+
+    if(fee.getRemainingAmount() > 0 && today.atZone(ZoneId.of("UTC")).toLocalDate().isAfter(targetDate)){
       if(today.isAfter(fee.getDueDatetime().plus(delayPenaltyService.getDelayPenalty().getGrace_delay(),ChronoUnit.DAYS))){
         return new Fee()
                 .id(fee.getId())
@@ -37,13 +44,13 @@ public class FeeMapper {
                 .status(fee.getStatus())
                 .type(fee.getType())
                 .totalAmount(fee.getTotalAmount())
-                .remainingAmount(FeeUtils.realAmountToPay(
+                .remainingAmount((int) Math.round(FeeUtils.realAmountToPay(
                         fee.getRemainingAmount(),
                         delayPenaltyService.getDelayPenalty().getInterest_percent(),
                         fee.getDueDatetime(),
                         delayPenaltyService.getDelayPenalty().getGrace_delay(),
                         today,
-                        delayPenaltyService.getDelayPenalty().getApplicability_delay_after_grace()))
+                        delayPenaltyService.getDelayPenalty().getApplicability_delay_after_grace())))
                 .comment(fee.getComment())
                 .creationDatetime(fee.getCreationDatetime())
                 .updatedAt(fee.getUpdatedAt())

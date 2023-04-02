@@ -100,7 +100,7 @@ class FeeIT {
         .type(CreateFee.TypeEnum.TUITION)
         .totalAmount(5000)
         .comment("Comment")
-        .dueDatetime(Instant.parse("2021-12-08T08:25:24.00Z"));
+        .dueDatetime(Instant.now());
   }
   @BeforeEach
   void setUp() {
@@ -118,6 +118,7 @@ class FeeIT {
     assertEquals(fee1(), actualFee);
     assertTrue(actual.contains(fee1()));
     assertTrue(actual.contains(fee2()));
+    System.out.println(actual.get(0));
     assertTrue(actual.contains(fee3()));
   }
 
@@ -179,6 +180,8 @@ class FeeIT {
     List<Fee> actual = api.createStudentFees(STUDENT1_ID, List.of(creatableFee1()));
 
     List<Fee> expected = api.getStudentFees(STUDENT1_ID, 1, 5, null);
+    System.out.println(actual.get(0));
+    System.out.println(expected.get(0));
     assertTrue(expected.containsAll(actual));
   }
 
