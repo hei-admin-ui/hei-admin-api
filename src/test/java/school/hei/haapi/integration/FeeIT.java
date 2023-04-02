@@ -14,6 +14,7 @@ import school.hei.haapi.endpoint.rest.api.PayingApi;
 import school.hei.haapi.endpoint.rest.client.ApiClient;
 import school.hei.haapi.endpoint.rest.client.ApiException;
 import school.hei.haapi.endpoint.rest.model.CreateFee;
+import school.hei.haapi.endpoint.rest.model.DelayPenalty;
 import school.hei.haapi.endpoint.rest.model.Fee;
 import school.hei.haapi.endpoint.rest.security.cognito.CognitoComponent;
 import school.hei.haapi.integration.conf.AbstractContextInitializer;
@@ -86,11 +87,11 @@ class FeeIT {
     fee.setStatus(Fee.StatusEnum.LATE);
     fee.setType(Fee.TypeEnum.TUITION);
     fee.setTotalAmount(5000);
-    fee.setRemainingAmount(5000);
+    fee.setRemainingAmount(5464);
     fee.setComment("Comment");
     fee.setUpdatedAt(Instant.parse("2023-02-08T08:30:24Z"));
     fee.creationDatetime(Instant.parse("2022-12-08T08:25:24.00Z"));
-    fee.setDueDatetime(Instant.parse("2021-12-09T08:25:24.00Z"));
+    fee.setDueDatetime(Instant.parse("2023-03-15T08:25:24.00Z"));
     return fee;
   }
 
@@ -101,7 +102,6 @@ class FeeIT {
         .comment("Comment")
         .dueDatetime(Instant.parse("2021-12-08T08:25:24.00Z"));
   }
-
   @BeforeEach
   void setUp() {
     setUpCognito(cognitoComponentMock);

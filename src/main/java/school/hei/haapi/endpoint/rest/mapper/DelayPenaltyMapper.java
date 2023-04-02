@@ -15,11 +15,6 @@ import java.util.UUID;
 public class DelayPenaltyMapper {
 
     public DelayPenalty toDomain(CreateDelayPenaltyChange domain){
-        int min = 1;
-        int max = 10;
-        Random random = new Random();
-        int randomNumber = random.nextInt(max - min + 1) + min;
-        System.out.println(randomNumber);
         return DelayPenalty
                 .builder()
                 .id(String.valueOf(new UUIDGenerator()))

@@ -56,7 +56,7 @@ class DelayPenaltyIT {
         delayPenalty.setInterestPercent(3);
         delayPenalty.setInterestTimerate(DelayPenalty.InterestTimerateEnum.DAILY);
         delayPenalty.setGraceDelay(7);
-        delayPenalty.setApplicabilityDelayAfterGrace(6);
+        delayPenalty.setApplicabilityDelayAfterGrace(3);
         delayPenalty.setCreationDatetime(Instant.parse("2022-11-08T08:25:24.00Z"));
         return delayPenalty;
     }
